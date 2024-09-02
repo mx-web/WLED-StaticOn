@@ -6750,6 +6750,58 @@ uint16_t mode_pixels(void) {                    // Pixels. By Andrew Tuline.
 } // mode_pixels()
 static const char _data_FX_MODE_PIXELS[] PROGMEM = "Pixels@Fade rate,# of pixels;!,!;!;1v;m12=0,si=0"; // Pixels, Beatsin
 
+uint16_t mode_fillStatic(void) {
+
+
+  SEGMENT.fill_solid(SEGCOLOR(1));
+
+  uint32_t cycleTime = 1 + (255 - SEGMENT.speed);
+  uint32_t it = strip.now / cycleTime;
+  
+  uint16_t offset = SEGMENT.intensity;
+
+  for(uint16_t i = 0; i < SEGENV.aux0; i++) {
+      if(SEGENV.aux0 > offset) {
+        SEGMENT.setPixelColor(i-offset, SEGCOLOR(0));
+      }
+  }
+  
+  if (it != SEGENV.step) {
+    if(SEGENV.aux0 < SEGLEN + offset) {
+      SEGENV.aux0++;
+    }
+    SEGENV.step = it;
+  }
+  return FRAMETIME;
+}
+
+static const char _data_FX_MODE_FILLSTATIC[] PROGMEM = "Static Fill@Speed,Offset,,,;FX,BG,C;!;ix=0";
+
+uint16_t mode_emptyStatic(void) {
+
+  uint32_t cycleTime = 1 + (255 - SEGMENT.speed);
+  uint32_t it = strip.now / cycleTime;
+  
+  uint16_t offset = SEGMENT.intensity;
+
+  for(uint16_t i = 0; i <= SEGENV.aux0; i++) {
+    if(SEGENV.aux0 > offset) {
+
+      SEGMENT.setPixelColor((SEGLEN-i)+offset, SEGCOLOR(1));
+    }
+  }
+  
+  if (it != SEGENV.step) {
+    if(SEGENV.aux0 < SEGLEN + offset) {
+      SEGENV.aux0++;
+    }
+    SEGENV.step = it;
+  }
+  return FRAMETIME;
+}
+
+static const char _data_FX_MODE_EMPTYSTATIC[] PROGMEM = "Static Empty@Speed,Offset,,,;FX,BG,C;!;ix=0";
+
 
 ///////////////////////////////
 //     BEGIN FFT ROUTINES    //
@@ -7695,6 +7747,7 @@ void WS2812FX::setupEffectData() {
   }
   // now replace all pre-allocated effects
   // --- 1D non-audio effects ---
+
   addEffect(FX_MODE_BLINK, &mode_blink, _data_FX_MODE_BLINK);
   addEffect(FX_MODE_BREATH, &mode_breath, _data_FX_MODE_BREATH);
   addEffect(FX_MODE_COLOR_WIPE, &mode_color_wipe, _data_FX_MODE_COLOR_WIPE);
@@ -7809,7 +7862,8 @@ void WS2812FX::setupEffectData() {
   addEffect(FX_MODE_CHUNCHUN, &mode_chunchun, _data_FX_MODE_CHUNCHUN);
   addEffect(FX_MODE_DANCING_SHADOWS, &mode_dancing_shadows, _data_FX_MODE_DANCING_SHADOWS);
   addEffect(FX_MODE_WASHING_MACHINE, &mode_washing_machine, _data_FX_MODE_WASHING_MACHINE);
-
+  addEffect(FX_MODE_FILL_STATIC, &mode_fillStatic, _data_FX_MODE_FILLSTATIC);
+  addEffect(FX_MODE_EMPTY_STATIC, &mode_emptyStatic, _data_FX_MODE_EMPTYSTATIC);
   addEffect(FX_MODE_BLENDS, &mode_blends, _data_FX_MODE_BLENDS);
   addEffect(FX_MODE_TV_SIMULATOR, &mode_tv_simulator, _data_FX_MODE_TV_SIMULATOR);
   addEffect(FX_MODE_DYNAMIC_SMOOTH, &mode_dynamic_smooth, _data_FX_MODE_DYNAMIC_SMOOTH);
